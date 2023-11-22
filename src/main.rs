@@ -92,8 +92,10 @@ fn draw_food(dh: &mut RaylibDrawHandle, food_pos: &Vector2) {
     );
 }
 
-fn update_food(food_pos: &mut Vector2, snakes: &mut Vec<Vector2>) {
+fn update_food(food_pos: &mut Vector2, snakes: &mut Vec<Vector2>, score: &mut i32) {
     if check_collision_point_circle(snakes[0], *food_pos, BAR_SIZE as f32 / 2.0) {
+        *score += 1;
+
         let mut new_x: i32 = get_random_value::<i32>(0, 17) * BAR_SIZE;
         let mut new_y: i32 = get_random_value::<i32>(0, 13) * BAR_SIZE;
 
@@ -129,6 +131,7 @@ fn main() {
     let mut food_pos = Vector2::new(9.0 * BAR_SIZE as f32, 7.0 * BAR_SIZE as f32);
     let mut timer: i32 = 0;
     let mut game_over: bool = false;
+    let mut score: i32 = 0;
 
     while !rl.window_should_close() {
         let mut dh = rl.begin_drawing(&thread);
@@ -139,7 +142,7 @@ fn main() {
             draw_grids(&mut dh);
             draw_food(&mut dh, &food_pos);
             update_snakes(&mut snakes, &snake_vel, &mut timer, &mut game_over);
-            update_food(&mut food_pos, &mut snakes);
+            update_food(&mut food_pos, &mut snakes, &mut score);
 
             if !is_horizontal(&snake_dir) && dh.is_key_pressed(KeyboardKey::KEY_LEFT) {
                 snake_dir = Direction::Left;
@@ -163,6 +166,14 @@ fn main() {
                 "GAME OVER!",
                 WINDOW_WIDTH / 2 - 25 * 6,
                 WINDOW_HEIGHT / 2 - 25,
+                50,
+                Color::WHITE,
+            );
+
+            dh.draw_text(
+                format!("SCORE: {}", score).as_str(),
+                WINDOW_WIDTH / 2 - 25 * 6,
+                WINDOW_HEIGHT / 2 + 25,
                 50,
                 Color::WHITE,
             );
