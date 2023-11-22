@@ -1,4 +1,3 @@
-use raylib::ffi::IsKeyPressed;
 use raylib::prelude::*;
 use std::ops::Add;
 
@@ -15,17 +14,11 @@ enum Direction {
 }
 
 fn is_horizontal(direction: &Direction) -> bool {
-    match direction {
-        Direction::Left | Direction::Right => true,
-        _ => false,
-    }
+    matches!(direction, Direction::Left | Direction::Right)
 }
 
 fn is_vertical(direction: &Direction) -> bool {
-    match direction {
-        Direction::Up | Direction::Down => true,
-        _ => false,
-    }
+    matches!(direction, Direction::Up | Direction::Down)
 }
 
 fn draw_grids(dh: &mut RaylibDrawHandle) {
@@ -48,7 +41,6 @@ fn draw_snakes(dh: &mut RaylibDrawHandle, snakes: &Vec<Vector2>) {
     }
 }
 
-// TODO: check if head collide with body.
 fn update_snakes(
     snakes: &mut Vec<Vector2>,
     snake_vel: &Vector2,
@@ -65,6 +57,19 @@ fn update_snakes(
         }
 
         snakes[0] = snakes[0].add(*snake_vel);
+
+        // check if the snake's head collides with the snake's body
+        for i in 1..snakes.len() {
+            let head_rec =
+                Rectangle::new(snakes[0].x, snakes[0].y, BAR_SIZE as f32, BAR_SIZE as f32);
+
+            let body_rec =
+                Rectangle::new(snakes[i].x, snakes[i].y, BAR_SIZE as f32, BAR_SIZE as f32);
+
+            if head_rec.check_collision_recs(&body_rec) {
+                *game_over = true;
+            }
+        }
 
         if snakes[0].x as i32 >= WINDOW_WIDTH || snakes[0].x < 0.0 {
             *game_over = true;
@@ -121,7 +126,7 @@ fn main() {
 
     let mut snake_vel = Vector2::new(0.0, BAR_SIZE as f32);
     let mut snake_dir = Direction::Down;
-    let mut food_pos = Vector2::new(0.0, 0.0);
+    let mut food_pos = Vector2::new(9.0 * BAR_SIZE as f32, 7.0 * BAR_SIZE as f32);
     let mut timer: i32 = 0;
     let mut game_over: bool = false;
 
@@ -130,38 +135,35 @@ fn main() {
         dh.clear_background(Color::BLACK);
 
         if !game_over {
-            update_food(&mut food_pos, &mut snakes);
             draw_snakes(&mut dh, &snakes);
             draw_grids(&mut dh);
             draw_food(&mut dh, &food_pos);
             update_snakes(&mut snakes, &snake_vel, &mut timer, &mut game_over);
+            update_food(&mut food_pos, &mut snakes);
 
-            unsafe {
-                if !is_horizontal(&snake_dir) && IsKeyPressed(KeyboardKey::KEY_LEFT as i32) {
-                    snake_dir = Direction::Left;
-                    snake_vel.x = -BAR_SIZE as f32;
-                    snake_vel.y = 0.0;
-                } else if !is_horizontal(&snake_dir) && IsKeyPressed(KeyboardKey::KEY_RIGHT as i32)
-                {
-                    snake_dir = Direction::Right;
-                    snake_vel.x = BAR_SIZE as f32;
-                    snake_vel.y = 0.0;
-                } else if !is_vertical(&snake_dir) && IsKeyPressed(KeyboardKey::KEY_UP as i32) {
-                    snake_dir = Direction::Up;
-                    snake_vel.x = 0.0;
-                    snake_vel.y = -BAR_SIZE as f32;
-                } else if !is_vertical(&snake_dir) && IsKeyPressed(KeyboardKey::KEY_DOWN as i32) {
-                    snake_dir = Direction::Down;
-                    snake_vel.x = 0.0;
-                    snake_vel.y = BAR_SIZE as f32;
-                }
+            if !is_horizontal(&snake_dir) && dh.is_key_pressed(KeyboardKey::KEY_LEFT) {
+                snake_dir = Direction::Left;
+                snake_vel.x = -BAR_SIZE as f32;
+                snake_vel.y = 0.0;
+            } else if !is_horizontal(&snake_dir) && dh.is_key_pressed(KeyboardKey::KEY_RIGHT) {
+                snake_dir = Direction::Right;
+                snake_vel.x = BAR_SIZE as f32;
+                snake_vel.y = 0.0;
+            } else if !is_vertical(&snake_dir) && dh.is_key_pressed(KeyboardKey::KEY_UP) {
+                snake_dir = Direction::Up;
+                snake_vel.x = 0.0;
+                snake_vel.y = -BAR_SIZE as f32;
+            } else if !is_vertical(&snake_dir) && dh.is_key_pressed(KeyboardKey::KEY_DOWN) {
+                snake_dir = Direction::Down;
+                snake_vel.x = 0.0;
+                snake_vel.y = BAR_SIZE as f32;
             }
         } else {
             dh.draw_text(
                 "GAME OVER!",
-                WINDOW_WIDTH / 2 - 25 * 3,
+                WINDOW_WIDTH / 2 - 25 * 6,
                 WINDOW_HEIGHT / 2 - 25,
-                25,
+                50,
                 Color::WHITE,
             );
         }
