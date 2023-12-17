@@ -32,9 +32,9 @@ fn draw_grids(dh: &mut RaylibDrawHandle) {
 }
 
 fn draw_snakes(dh: &mut RaylibDrawHandle, snakes: &Vec<Vector2>) {
-    for snake in snakes {
+    for i in 0..snakes.len() {
         dh.draw_rectangle_v(
-            snake,
+            snakes[i],
             Vector2::new(BAR_SIZE as f32, BAR_SIZE as f32),
             Color::GREEN,
         );
